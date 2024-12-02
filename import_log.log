@@ -1,0 +1,28 @@
+2024-11-04 11:38:49,933 - DEBUG - Calling on_part_begin with no data
+2024-11-04 11:38:49,933 - DEBUG - Calling on_header_field with data[54:73]
+2024-11-04 11:38:49,933 - DEBUG - Calling on_header_value with data[75:124]
+2024-11-04 11:38:49,933 - DEBUG - Calling on_header_end with no data
+2024-11-04 11:38:49,933 - DEBUG - Calling on_header_field with data[126:138]
+2024-11-04 11:38:49,934 - DEBUG - Calling on_header_value with data[140:205]
+2024-11-04 11:38:49,934 - DEBUG - Calling on_header_end with no data
+2024-11-04 11:38:49,934 - DEBUG - Calling on_headers_finished with no data
+2024-11-04 11:38:49,934 - DEBUG - Calling on_part_data with data[209:13116]
+2024-11-04 11:38:49,934 - DEBUG - Calling on_part_end with no data
+2024-11-04 11:38:49,934 - DEBUG - Calling on_end with no data
+2024-11-04 11:38:50,042 - INFO - Arquivo reduction.xlsx importado com sucesso.
+2024-11-04 11:38:50,043 - INFO - Nao foram encontrados erros de tipo no arquivo reduction.xlsx.
+2024-11-04 11:38:50,144 - INFO - DataFrame salvo em arquivo_processado\reduction_processed.xlsx
+2024-11-04 11:39:32,624 - DEBUG - Calling on_part_begin with no data
+2024-11-04 11:39:32,624 - DEBUG - Calling on_header_field with data[54:73]
+2024-11-04 11:39:32,624 - DEBUG - Calling on_header_value with data[75:124]
+2024-11-04 11:39:32,624 - DEBUG - Calling on_header_end with no data
+2024-11-04 11:39:32,624 - DEBUG - Calling on_header_field with data[126:138]
+2024-11-04 11:39:32,624 - DEBUG - Calling on_header_value with data[140:205]
+2024-11-04 11:39:32,624 - DEBUG - Calling on_header_end with no data
+2024-11-04 11:39:32,624 - DEBUG - Calling on_headers_finished with no data
+2024-11-04 11:39:32,624 - DEBUG - Calling on_part_data with data[209:13116]
+2024-11-04 11:39:32,624 - DEBUG - Calling on_part_end with no data
+2024-11-04 11:39:32,624 - DEBUG - Calling on_end with no data
+2024-11-04 11:39:32,886 - INFO - Arquivo reduction.xlsx importado com sucesso.
+2024-11-04 11:39:32,887 - INFO - Nao foram encontrados erros de tipo no arquivo reduction.xlsx.
+2024-11-04 11:39:32,990 - INFO - DataFrame salvo em arquivo_processado\reduction_processed.xlsx

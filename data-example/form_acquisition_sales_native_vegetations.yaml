@@ -1,0 +1,523 @@
+table_name: form_acquisition_sales_native_vegetations
+display_name: Aquisição ou venda de floresta nativa
+
+comment:
+  A tabela "form_aquisition_sales_natural_forest" recebe os dados de bioma, fisionomia,
+  estágio de regeneração e área de vegetação nativa. O estoque de carbono é
+  calculado por meio de premissas relacionadas ao estágio de regeneração,
+  enquanto as remoções são calculadas pelo método de Gain-loss, utilizando o
+  incremento anual dos fragmentos.
+
+  As informações serão utilizadas para calcular as remoções nas áreas compradas ou vendidas pela empresa no ano inventariado e,
+  assim, fazer o ajuste das remoções por floresta nativas no ano inventariado.
+
+# Definição para intercâmbio sistêmico de dados
+# por arquivo texto (CSV - comma-separated values)
+csv_definition:
+  - standard: rfc4180 #https://www.rfc-editor.org/rfc/rfc4180
+  - encoding: UTF-8 BOM # https://www.rfc-editor.org/rfc/rfc3629
+  - mime_type: text/csv
+  - line_break_characters: ["CR", "LF"] # MSDOS/Windows style
+  - separator_character: "," # comma (C do CSV)
+  - optional_enclosing_character:
+      '"' # double quotes
+      # aspas duplas para delimitar textos com caracteres usados pelo CSV,
+      # como vírgulas e quebras de linhas
+  - header_line_is_required: true # a primeira linha do arquivo deve ser o cabeçalho com os nomes dos campos
+
+# campos chaves exclusivos, que definem que uma linha é "única" no formulário,
+# auxiliando na atualização de dados linhas previamente importadas
+# criação de novas linhas
+unique_key_fields:
+  - reference_year
+  - reference_month
+  - operational_unit
+  - region
+  - biome
+  - physiognomy_ibge
+
+variables:
+  - inventory_base_year #
+
+# Definição de cada campo a ser importado,
+# incluindo regras de validação para qualidade dos dados
+#
+# Para a definição de tipos no banco de dados,
+# estão sendo utilizados os tipos do PostgreSQL.
+#
+# Exemplos:
+#
+# - varchar(15): campo de texto com tamanho variável com no máximo 15 caracteres (suportando unicode)
+#
+# - numeric(5,2): campo numérico com tamanho de até 5 dígitos, sendo 2 deles para decimais.
+#   Exemplo: 123.45 (padrão internacional, utilizando "." como separador de decimal)
+#
+# - date: campo de data
+#   Exemplo: 2022-03-02
+#
+# - time: campo de horário (horas:minutos ou horas:minutos:segundos)
+#   Exemplo: 22:05:33
+#
+# - timestamptz: campo de data e horário completo, precisão de micro segundos e fuso horário
+#   Exemplo: 2022-03-02T22:05:33.007-03:00
+fields:
+  suggest_scope:
+    csv_column_order: 0
+    display_name: Escopo
+    description: escopo da fonte de emissão sugerida pelo cliente
+    database_type: varchar(1)
+    validation:
+      is_required: false
+      kind: selection
+      data:
+        - "1"
+      comment: |
+        comentário da regra de negócio
+
+  emission_category:
+    csv_column_order: 1
+    display_name: Categoria
+    description: categoria de emissão
+    database_type: varchar(100)
+    validation:
+      is_required: false
+      kind: selection
+      data:
+        - carbon_stock
+
+  emissions_subcategory:
+    csv_column_order: 2
+    display_name: Subcategoria
+    description: subcategoria de emissão
+    database_type: varchar(100)
+    validation:
+      is_required: true
+      kind: selection
+      data:
+        - natural_forest
+
+  reference_year:
+    csv_column_order: 3
+    display_name: Ano
+    description: ano de referência para o cálculo de emissões
+    database_type: decimal(4,0)
+    validation:
+      is_required: true
+      kind: selection
+      data: # uso de mustache template engine (https://mustache.github.io/mustache.5.html)
+        - "{{inventory_base_year}}" # Ano de referência do inventário
+
+  reference_month:
+    csv_column_order: 4
+    display_name: Mês
+    description: mês de referência para o cálculo de emissões
+    database_type: varchar(2)
+    validation:
+      is_required: true
+      kind: selection
+      data:
+        - "01"
+        - "02"
+        - "03"
+        - "04"
+        - "05"
+        - "06"
+        - "07"
+        - "08"
+        - "09"
+        - "10"
+        - "11"
+        - "12"
+
+  operational_unit:
+    csv_column_order: 5
+    display_name: Unidade Operacional
+    description: unidade operacional da empresa
+    database_type: varchar(250)
+    validation:
+      is_required: false
+      kind: text
+      data:
+        min: 2
+        mxn: 250
+      comment: |
+        texto de 2 a 250 caracteres
+        apenas caracteres latinos, números, hífen, traço baixo, ponto e espaço
+        precisa começar e terminar com letra ou número (evita espaços não intencionais)
+
+  region:
+    csv_column_order: 6
+    display_name: Setor
+    description: setor da unidade operacional
+    database_type: varchar(250)
+    validation:
+      is_required: false
+      kind: text
+      data:
+        min: 2
+        mxn: 250
+      comment: |
+        texto de 2 a 250 caracteres
+        apenas caracteres latinos, números, hífen, traço baixo, ponto e espaço
+        precisa começar e terminar com letra ou número (evita espaços não intencionais)
+
+  biome:
+    csv_column_order: 7
+    display_name: Bioma
+    description: bioma
+    database_type: varchar(250)
+    validation:
+      is_required: true
+      kind: selection
+      data:
+        - Amazônia
+        - Caatinga
+        - Cerrado
+        - Mata Atlântica
+        - Pampa
+        - Pantanal
+
+  physiognomy_ibge:
+    csv_column_order: 8
+    display_name: Fisionomia
+    description: fisionomia IBGE
+    database_type: varchar(250)
+    validation:
+      is_required: true
+      kind: selection
+      data:
+        - Floresta Ombrófila Aberta Aluvial
+        - Floresta Ombrófila Aberta de Terras Baixas
+        - Floresta Ombrófila Aberta Submontana
+        - Floresta Estacional Decidual de Terras Baixas
+        - Floresta Estacional Decidual Submontana
+        - Floresta Ombrófila Densa Aluvial
+        - Floresta Ombrófila Densa de Terras Baixas
+        - Floresta Ombrófila Densa Montana
+        - Floresta Ombrófila Densa Submontana
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual de Terras Baixas
+        - Floresta Estacional Semidecidual Montana
+        - Floresta Estacional Semidecidual Submontana
+        - Campinarana Arborizada
+        - Campinarana Arbustiva
+        - Campinarana Florestada
+        - Campinarana Gramíneo-Lenhosa
+        - Formação Pioneira com influência fluvial e/ou lacustre
+        - Formação Pioneira com influência fluviomarinha (mangue)
+        - Formação Pioneira com influência marinha (restinga)
+        - Refúgio Montano
+        - Savana Arborizada
+        - Savana Florestada
+        - Savana Gramíneo-Lenhosa
+        - Savana Parque
+        - Savana Estépica Arborizada
+        - Savana Estépica Florestada
+        - Savana Estépica Gramíneo-Lenhosa
+        - Savana Estépica Parque
+        - Floresta Ombrófila Aberta Montana
+        - Floresta Estacional Decidual Aluvial
+        - Refúgio Alto-Montano
+        - Refúgio Submontano
+        - Contato Savana/Formações Pioneiras – Específico para Formação Pioneira com Influência Marinha (Restinga)
+        - Contato Savana/Floresta Estacional
+        - Contato Savana/Floresta Ombrófila
+        - Contato Savana/Savana Estépica
+        - Contato Savana Estépica/Floresta Estacional
+        - Contato Campinarana/Floresta Ombrófila
+        - Contato Floresta Ombrófila/Floresta Estacional
+        - Savana Estépica
+        - Savana
+        - Áreas das Formações Pioneira
+        - Campinarana
+        - Floresta Ombrófila Aberta Aluvial
+        - Floresta Ombrófila Aberta de Terras Baixas
+        - Floresta Ombrófila Aberta Submontana
+        - Floresta Estacional Decidual Aluvial
+        - Floresta Estacional Decidual de Terras Baixas
+        - Floresta Estacional Decidual Montana
+        - Floresta Estacional Decidual Montana
+        - Floresta Estacional Decidual Submontana
+        - Floresta Estacional Decidual Submontana
+        - Floresta Ombrófila Densa Aluvial
+        - Floresta Ombrófila Densa de Terras Baixas
+        - Floresta Ombrófila Densa Submontana
+        - Estepe Gramíneo-Lenhosa
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual de Terras Baixas
+        - Floresta Estacional Semidecidual de Terras Baixas
+        - Floresta Estacional Semidecidual de Terras Baixas
+        - Floresta Estacional Semidecidual Montana
+        - Floresta Estacional Semidecidual Montana
+        - Floresta Estacional Semidecidual Submontana
+        - Floresta Estacional Semidecidual Submontana
+        - Floresta Ombrófila Mista Aluvial
+        - Floresta Ombrófila Mista Alto-Montana
+        - Floresta Ombrófila Mista Montana
+        - Contato Floresta Ombrófila/Floresta Estacional
+        - Áreas das Formações Pioneira
+        - Formação Pioneira com influência fluvial e/ou lacustre
+        - Formação Pioneira com influência fluviomarinha (mangue)
+        - Formação Pioneira com influência marinha (restinga)
+        - Refúgio Montano
+        - Savana
+        - Savana Arborizada
+        - Savana Florestada
+        - Savana Florestada
+        - Savana Florestada
+        - Savana Florestada
+        - Savana Gramíneo-lenhosa
+        - Contato Savana/Floresta Ombrófila Mista
+        - Contato Savana/Floresta Estacional
+        - Contato Savana/Floresta Ombrófila
+        - Savana Parque
+        - Savana Parque
+        - Contato Savana/Savana Estépica
+        - Contato Savana/Savana Estépica/Floresta Estacional
+        - Savana Estépica
+        - Savana Estépica Arborizada
+        - Savana Estépica Florestada
+        - Savana Estépica Gramíneo-Lenhosa
+        - Contato Savana Estépica/Floresta Estacional
+        - Savana Estépica Parque
+        - Vereda
+        - Floresta Ombrófila Aberta Aluvial
+        - Floresta Ombrófila Aberta de Terras Baixas
+        - Floresta Ombrófila Aberta Montana
+        - Floresta Ombrófila Aberta Submontana
+        - Floresta Estacional Decidual Aluvial
+        - Floresta Estacional Decidual de Terras Baixas
+        - Floresta Estacional Decidual Montana
+        - Floresta Estacional Decidual Submontana
+        - Floresta Ombrófila Densa
+        - Floresta Ombrófila Densa Aluvial
+        - Floresta Ombrófila Densa de Terras Baixas
+        - Floresta Ombrófila Densa Alto-Montana
+        - Floresta Ombrófila Densa Montana
+        - Floresta Ombrófila Densa Submontana
+        - Estepe
+        - Estepe Gramíneo-Lenhosa
+        - Contato Estepe/Floresta Ombrófila Mista
+        - Contato Estepe/Floresta Estacional
+        - Floresta Estacional Semidecidual
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual de Terras Baixas
+        - Floresta Estacional Semidecidual Montana
+        - Floresta Estacional Semidecidual Submontana
+        - Campinarana
+        - Campinarana Arborizada
+        - Campinarana Gramíneo-Lenhosa
+        - Floresta Ombrófila Mista
+        - Floresta Ombrófila Mista Aluvial
+        - Floresta Ombrófila Mista Alto-Montana
+        - Floresta Ombrófila Mista Montana
+        - Floresta Ombrófila Mista Submontana
+        - Contato Floresta Estacional/Floresta Ombrófila Mista
+        - Contato Floresta Estacional/Formações Pioneiras – Específico para Formação Pioneira com Influência Marinha (Restinga)
+        - Contato Floresta Ombrófila Densa/Floresta Ombrófila Mista
+        - Contato Floresta Ombrófila/Floresta Estacional
+        - Contato Floresta Ombrófila/Formaç ões Pioneiras – Específico para Formação Pioneira com Influência Marinha (Restinga)
+        - Áreas das Formações Pioneira
+        - Formação Pioneira com influência fluvial e/ou lacustre
+        - Formação Pioneira com influência fluviomarinha (mangue)
+        - Formação Pioneira com influência marinha (restinga)
+        - Refúgio Alto-Montano
+        - Refúgio Montano
+        - Savana
+        - Savana Arborizada
+        - Savana Florestada
+        - Savana Gramíneo-Lenhosa
+        - Contato Savana/Floresta Ombrófila Mista
+        - Contato Savana/Floresta Estacional
+        - Contato Savana/Floresta Ombrófila
+        - Contato Savana/Formações Pioneiras – Específico para Formação Pioneira com Influência Marinha (Restinga)
+        - Savana Parque
+        - Contato Savana/Savana Estépica
+        - Savana Estépica
+        - Savana Estépica Arborizada
+        - Savana Estépica Florestada
+        - Savana Estépica Gramíneo-Lenhosa
+        - Contato Savana Estépica/Floresta Estacional
+        - Floresta Ombrófila Aberta Aluvial
+        - Floresta Ombrófila Aberta de Terras Baixas
+        - Floresta Ombrófila Aberta Montana
+        - Afloramento Rochoso
+        - Floresta Ombrófila Aberta Submontana
+        - Floresta Estacional Decidual Aluvial
+        - Floresta Estacional Decidual de Terras Baixas
+        - Floresta Estacional Decidual Montana
+        - Floresta Estacional Decidual Submontana
+        - Floresta Ombrófila Densa Aluvial
+        - Floresta Ombrófila Densa Montana
+        - Dunas
+        - Floresta Ombrófila Densa Submontana
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual de Terras Baixas
+        - Floresta Estacional Semidecidual Montana
+        - Floresta Estacional Semidecidual Submontana
+        - Formação Pioneira com influência fluvial e/ou lacustre
+        - Formação Pioneira com influência fluviomarinha (mangue)
+        - Formação Pioneira com influência marinha (restinga)
+        - Refúgio Montano
+        - Savana Arborizada
+        - Savana Florestada
+        - Savana Gramíneo-Lenhosa
+        - Contato Savana/Floresta Estacional
+        - Savana Parque
+        - Contato Savana/Savana Estépica
+        - Savana Estépica Arborizada
+        - Savana Estépica Florestada
+        - Savana Estépica Gramíneo-Lenhosa
+        - Contato Savana Estépica/Floresta Estacional
+        - Savana Estépica Parque
+        - Floresta Estacional Decidual Aluvial
+        - Floresta Estacional Decidual de Terras Baixas
+        - Floresta Estacional Decidual Montana
+        - Floresta Estacional Decidual Submontana
+        - Floresta Ombrófila Densa Aluvial
+        - Floresta Ombrófila Densa de Terras Baixas
+        - Floresta Ombrófila Densa Montana
+        - Dunas
+        - Floresta Ombrófila Densa Submontana
+        - Estepe
+        - Estepe Arborizada
+        - Estepe Gramíneo-Lenhosa
+        - Estepe Parque
+        - Contato Estepe/Floresta Ombrófila Mista
+        - Contato Estepe/Floresta Estacional
+        - Contato Estepe/Formações Pioneiras – Específico para Formação Pioneira com Influência Marinha (Restinga)
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual de Terras Baixas
+        - Floresta Estacional Semidecidual Montana
+        - Floresta Estacional Semidecidual Submontana
+        - Floresta Ombrófila Mista Aluvial
+        - Floresta Ombrófila Mista Submontana
+        - Contato Floresta Estacional/Floresta Ombrófila Mista
+        - Contato Floresta Estacional/Formações Pioneiras – Específico para Formação Pioneira com Influência Marinha (Restinga)
+        - Contato Floresta Ombrófila Densa/Floresta Ombrófila Mista
+        - Contato Floresta Ombrófila/Formaç ões Pioneiras – Específico para Formação Pioneira com Influência Marinha (Restinga)
+        - Áreas das Formações Pioneira
+        - Formação Pioneira com influência fluvial e/ou lacustre
+        - Formação Pioneira com influência fluviomarinha (mangue)
+        - Formação Pioneira com influência marinha (restinga)
+        - Savana Estépica
+        - Savana Estépica Gramíneo-Lenhosa
+        - Savana Estépica Parque
+        - Floresta Estacional Decidual Aluvial
+        - Floresta Estacional Decidual de Terras Baixas
+        - Floresta Estacional Decidual Submontana
+        - Floresta Estacional Semidecidual Aluvial
+        - Floresta Estacional Semidecidual de Terras Baixas
+        - Floresta Estacional Semidecidual Submontana
+        - Contato Savana/Floresta Estacional
+        - Contato Savana Estépica/Floresta Estacional
+        - Savana
+        - Savana Arborizada
+        - Savana Florestada
+        - Contato Savana/Savana Estépica
+        - Savana Estépica
+        - Savana Estépica Arborizada
+        - Savana Estépica Florestada
+        - Savana Gramíneo-Lenhosa
+        - Savana Estépica Gramíneo-Lenhosa
+        - Savana Parque
+        - Savana Estépica Parque
+
+  regeneration_stage:
+    csv_column_order: 9
+    display_name: Estágio de regeneração
+    description: estágio de regeneração
+    database_type: varchar(250)
+    validation:
+      is_required: true
+      kind: selection
+      data:
+        - Inicial
+        - Médio
+        - Avançado
+
+  area_ha:
+    csv_column_order: 10
+    display_name: Área
+    description: Área (em hectares)
+    database_type: numeric(18,6)
+    validation:
+      is_required: true
+      kind: numeric_range
+      data:
+        min: 0
+        max: 1000000000
+        precision: 6
+
+  acquisition_or_sales:
+    csv_column_order: 11
+    display_name: Aquisição ou venda
+    description: aquisição ou venda
+    database_type: varchar(100)
+    validation:
+      is_required: true
+      kind: selection
+      data:
+        - Aquisição
+        - Venda
+
+  collected_data_type:
+    csv_column_order: 12
+    display_name: Tipo de dado coletado
+    description: tipo de dado coletado para cálculo de incerteza
+    database_type: varchar(250)
+    validation:
+      is_required: true
+      kind: selection
+      data:
+        - Primário
+        - Primário de Terceiros
+        - Secundário - Calculado com base em dados reais
+        - Secundário - Premissas adotadas
+        - Secundário - Extrapolação
+
+  tracking_data:
+    csv_column_order: 13
+    display_name: Rastreabilidade
+    description: informações para rastreabilidade da fonte de coleta
+    database_type: varchar(250)
+    validation:
+      is_required: true
+      kind: text
+      data:
+        min: 2
+        mxn: 250
+
+  notes:
+    csv_column_order: 14
+    display_name: Observações
+    description: Observações para auxiliar o processo de auditoria
+    database_type: varchar(1000)
+    validation:
+      is_required: false
+      kind: text
+      data:
+        min: 2
+        mxn: 1000
+
+  attachment:
+    csv_column_order: 15
+    display_name: Anexo
+    description: referência para o anexo com evidência para respaldo dos dados informados
+    database_type: uuid
+    validation:
+      is_required: false
+      kind: uuid_v4 # exemplo: 4d2bdaeb-133f-4bbf-af96-10f8ff59d687
+      comment: |
+        No campo attachment deve ser informado o
+        UUID v4 (identificador universal único - versão 4)
+        que faz referência ao arquivo do anexo (primeira parte do nome do arquivo).
+
+        Os anexos devem ser enviados como arquivos, possuindo um nome padronizado
+        no formato "{uuid_v4}_{nome_amigável}.{extensão}"
+
+        exemplo:
+             4d2bdaeb-133f-4bbf-af96-10f8ff59d687_report-ipcc-2006.pdf
